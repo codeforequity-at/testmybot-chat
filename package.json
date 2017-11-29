@@ -6,7 +6,7 @@
   },
   "scripts": {
     "newpatch": "npm version patch && npm publish",
-    "version": "npm install testmybot@$npm_package_version --save",
+    "version": "npm install testmybot@$npm_package_version --save --no-package-lock",
     "postversion": "npm link testmybot"
   },
   "description": "Continuous Testing for your Chatbots - Commandline Chat",
