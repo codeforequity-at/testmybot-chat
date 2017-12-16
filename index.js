@@ -9,28 +9,21 @@ const async = require('async');
 const readline = require('readline');
 const inquirer = require('inquirer');
 
-var demomode = (process.env.DEMO === 'true');
-
-var configToSet = {};
-if (demomode) {
-  configToSet.docker = { 'container': { 'testmybot-fbmock': { 'env': { 'TESTMYBOT_FACEBOOK_DEMOMODE': true } } } };
-}
-
-testmybot.beforeAll(configToSet).then((config) => { 
+testmybot.beforeAll().then((config) => { 
 	return testmybot.beforeEach();
 }).then(function() {
 	
 	var conversation = [];
   
-  testmybot.msgqueue.registerPushListener((msg) => {
+  testmybot.on('MESSAGE_RECEIVEDFROMBOT', (container, msg) => {
 		if (msg) {
 			if (msg.messageText) {
 				console.log(chalk.blue('BOT SAYS ' + (msg.channel ? '(' + msg.channel + '): ' : ': ') + msg.messageText));
 				conversation.push({ from: 'bot', msg: msg.messageText, channel: msg.channel });
-			} else {
+			} else if (msg.sourceData && msg.sourceData.message) {
 				console.log(chalk.blue('BOT SAYS ' + (msg.channel ? '(' + msg.channel + '): ' : ': ')));
-				console.log(chalk.blue(JSON.stringify(msg.message, null, 2)));
-				conversation.push({ from: 'bot', msg: JSON.stringify(msg.message, null, 2), channel: msg.channel });
+				console.log(chalk.blue(JSON.stringify(msg.sourceData.message, null, 2)));
+				conversation.push({ from: 'bot', msg: JSON.stringify(msg.sourceData, null, 2), channel: msg.channel });
 			}
 		}
   });
@@ -79,11 +72,11 @@ testmybot.beforeAll(configToSet).then((config) => {
       var channel = line.substr(0, line.indexOf(' '));
       var text = line.substr(line.indexOf(' ') + 1);
 
-      testmybot.hears(text, 'me', channel);
+      testmybot.hears({ messageText: text, sender: 'me', channel: channel });
 			conversation.push({ from: 'me', msg: text, channel: channel });
       
 		} else {
-      testmybot.hears(line, 'me');
+      testmybot.hears({ messageText: line, sender: 'me'});
 			conversation.push({ from: 'me', msg: line });
 		}
 	});
